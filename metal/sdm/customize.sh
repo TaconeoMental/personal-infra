@@ -26,7 +26,7 @@ check_file_or_die() {
 }
 
 download_latest_image() {
-    local image_path="$1"
+    local image_path="$1.xz"
 
     echo "[*] Downloading OS image from $RASPIOS_LATEST_URL"
     wget $RASPIOS_LATEST_URL -q --show-progress -O $image_path
