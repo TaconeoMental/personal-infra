@@ -4,6 +4,10 @@ if [ $UID -ne 0 ]; then
     exec sudo -- "$0" "$@"
 fi
 
+# Real script path
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
+RASPIOS_LATEST_URL="https://downloads.raspberrypi.org/raspios_lite_arm64_latest"
+RASPIOS_CHKSUM_URL="$RASPIOS_LATEST_URL.sha256"
 
 echo_die() {
     if (( $# == 0 )); then
@@ -22,12 +26,11 @@ check_file_or_die() {
 }
 
 download_latest_image() {
-    OS_IMAGE=$(mktemp /tmp/raspios_rpi.XXXXXX)
-    trap "echo '[*] Deleting image'; rm -f $OS_IMAGE" 0 2 3 15
+    local image_path="$1"
 
     echo "[*] Downloading OS image from $RASPIOS_LATEST_URL"
-    wget $RASPIOS_LATEST_URL -q --show-progress -O $OS_IMAGE
-    echo $(wget $RASPIOS_CHKSUM_URL -O- -o /dev/null | cut -f1 -d' ') $OS_IMAGE | sha256sum --check --status
+    wget $RASPIOS_LATEST_URL -q --show-progress -O $image_path
+    echo $(wget $RASPIOS_CHKSUM_URL -O- -o /dev/null | cut -f1 -d' ') $image_path | sha256sum --check --status
 
     exit_status=$?
     if [ $exit_status -eq 1 ];
@@ -37,22 +40,19 @@ download_latest_image() {
     else
         echo "[+] Image checksum verified"
     fi
-    echo "$OS_IMAGE"
+    xz --decompress $image_path
 }
-
-# Real script path
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
 
 usage() {
     cat << EOF
 Usage: $0 <ARGS> <OPTARGS>
 
 <ARGS>:
-    -i, --image{"latest",PATH}: Download latest or RasPiOS image file path
-    -k, --key{STRING|PATH}:     SSH public key or 'authorized_keys' file path
+    -k, --key{STRING|PATH}: SSH public key or 'authorized_keys' file path.
+    -o, --output{PATH}: Output image path.
 
 <OPTARGS>
-    -o, --output{PATH}: Output image path. Original is overwritten if not set.
+    -i, --image{PATH}:  RasPiOS image file path. Will download lates if not specified.
 EOF
     exit 1
 }
@@ -73,22 +73,20 @@ do
 done
 
 case "" in
-    "$INPUT_IMAGE"|"$SSH_KEY")
+    "$SSH_KEY"|"$OUTPUT_IMAGE")
         usage ;;
 esac
 
-if [ "$INPUT_IMAGE" == "latest" ]; then
-    INPUT_IMAGE=$(download_latest_image)
-fi
-check_file_or_die "$INPUT_IMAGE"
-
-# Copy image if --output is set. I need to do this because SDM's --customize
-# flag overwrites the original image.
-if [ -v "OUTPUT_IMAGE" ]; then
+if [ -z "$INPUT_IMAGE" ]; then
+    download_latest_image $OUTPUT_IMAGE
+else
+    # Copy image if --output is set. I need to do this because SDM's --customize
+    # flag overwrites the original image.
     echo "[*] Creating new image '$OUTPUT_IMAGE'"
     pv $INPUT_IMAGE | dd bs=16M iflag=fullblock of=$OUTPUT_IMAGE
     INPUT_IMAGE=$OUTPUT_IMAGE # We don't need the original INPUT_IMAGE anymore
 fi
+check_file_or_die "$INPUT_IMAGE"
 
 if [ -f "$SSH_KEY" ]; then
     echo "[+] Using $SSH_KEY file"
