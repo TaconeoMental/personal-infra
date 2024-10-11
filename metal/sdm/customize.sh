@@ -6,7 +6,7 @@ fi
 
 
 echo_die() {
-    if (( $# == 0 )) ; then
+    if (( $# == 0 )); then
         cat /dev/stdin
     else
         echo "$1"
@@ -16,10 +16,28 @@ echo_die() {
 
 check_file_or_die() {
     local filepath="$1"
-    if [ ! -f "$filepath" ];
-    then
+    if [ ! -f "$filepath" ]; then
         echo_die "[-] $filepath is not a valid file"
     fi
+}
+
+download_latest_image() {
+    OS_IMAGE=$(mktemp /tmp/raspios_rpi.XXXXXX)
+    trap "echo '[*] Deleting image'; rm -f $OS_IMAGE" 0 2 3 15
+
+    echo "[*] Downloading OS image from $RASPIOS_LATEST_URL"
+    wget $RASPIOS_LATEST_URL -q --show-progress -O $OS_IMAGE
+    echo $(wget $RASPIOS_CHKSUM_URL -O- -o /dev/null | cut -f1 -d' ') $OS_IMAGE | sha256sum --check --status
+
+    exit_status=$?
+    if [ $exit_status -eq 1 ];
+    then
+        echo "[-] Image checksum validation failed"
+         exit 1
+    else
+        echo "[+] Image checksum verified"
+    fi
+    echo "$OS_IMAGE"
 }
 
 # Real script path
@@ -30,8 +48,8 @@ usage() {
 Usage: $0 <ARGS> <OPTARGS>
 
 <ARGS>:
-    -i, --image{PATH}:      RasPiOS image file path
-    -k, --key{STRING|PATH}: SSH public key or 'authorized_keys' file path
+    -i, --image{"latest",PATH}: Download latest or RasPiOS image file path
+    -k, --key{STRING|PATH}:     SSH public key or 'authorized_keys' file path
 
 <OPTARGS>
     -o, --output{PATH}: Output image path. Original is overwritten if not set.
@@ -58,20 +76,21 @@ case "" in
     "$INPUT_IMAGE"|"$SSH_KEY")
         usage ;;
 esac
+
+if [ "$INPUT_IMAGE" == "latest" ]; then
+    INPUT_IMAGE=$(download_latest_image)
+fi
 check_file_or_die "$INPUT_IMAGE"
-check_file_or_die "$SSH_KEY"
 
 # Copy image if --output is set. I need to do this because SDM's --customize
 # flag overwrites the original image.
-if [ -v "OUTPUT_IMAGE" ];
-then
+if [ -v "OUTPUT_IMAGE" ]; then
     echo "[*] Creating new image '$OUTPUT_IMAGE'"
     pv $INPUT_IMAGE | dd bs=16M iflag=fullblock of=$OUTPUT_IMAGE
     INPUT_IMAGE=$OUTPUT_IMAGE # We don't need the original INPUT_IMAGE anymore
 fi
 
-if [ -f "$SSH_KEY" ];
-then
+if [ -f "$SSH_KEY" ]; then
     echo "[+] Using $SSH_KEY file"
     SSH_PLUGIN_ARG="keysfile=$SSH_KEY"
 else
@@ -97,5 +116,5 @@ sdm \
     --plugin-debug \
     --plugin @$DIR/config/plugins.txt \
     --plugin apt-addrepo:"repo=$docker_repo|gpgkey=$docker_gpg_key|gpgkeyname=docker" \
-    --plugin $DIR/custom_plugins/ssh:"user=neo|$SSH_PLUGIN_ARG" \
+    --plugin $DIR/plugins/ssh:"user=neo|$SSH_PLUGIN_ARG" \
     $INPUT_IMAGE

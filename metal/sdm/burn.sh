@@ -6,7 +6,7 @@ fi
 
 
 echo_die() {
-    if (( $# == 0 )) ; then
+    if (( $# == 0 )); then
         cat /dev/stdin
     else
         echo "$1"
@@ -16,8 +16,7 @@ echo_die() {
 
 check_file_or_die() {
     local filepath="$1"
-    if [ ! -f "$filepath" ];
-    then
+    if [ ! -f "$filepath" ]; then
         echo_die "[-] $filepath is not a valid file"
     fi
 }
@@ -69,37 +68,31 @@ esac
 
 check_file_or_die $INPUT_IMAGE
 
-if [ -z "$OUTPUT_IMAGE" ] && [ -z "$OUTPUT_DEVICE" ];
-then
+if [ -z "$OUTPUT_IMAGE" ] && [ -z "$OUTPUT_DEVICE" ]; then
     echo_die "[-] No output specified (--write, --device)"
 fi
 
-if [ -n "$OUTPUT_IMAGE" ] && [ -n "$OUTPUT_DEVICE" ];
-then
+if [ -n "$OUTPUT_IMAGE" ] && [ -n "$OUTPUT_DEVICE" ]; then
     echo_die "[-] Must specify only one output (--write, --device)"
 fi
 
-if [ "$ENCRYPT_ROOTFS" == "false" ];
-then
+if [ "$ENCRYPT_ROOTFS" == "false" ]; then
     [ -n "$AUTH_KEYS_FILE" ] \
         && echo_die "[-] --keys and --port can only be used with the --encrypt flag"
 fi
 
 ENCRYPT_ARGUMENT=""
-if [ "$ENCRYPT_ROOTFS" == "true" ];
-then
+if [ "$ENCRYPT_ROOTFS" == "true" ]; then
     [ -z "$AUTH_KEYS_FILE" ] && echo_die '[-] You must specify an SSH authorized keys file'
     check_file_or_die $AUTH_KEYS_FILE
     ENCRYPT_ARGUMENT="--plugin cryptroot:ssh"
-    ENCRYPT_ARGUMENT="${ENCRYPT_ARGUMENT}|ihostname=$HOSTNAME-init"
+    ENCRYPT_ARGUMENT="${ENCRYPT_ARGUMENT}|ihostname=$HOSTNAME-crypt"
     ENCRYPT_ARGUMENT="${ENCRYPT_ARGUMENT}|crypto=xchacha"
     ENCRYPT_ARGUMENT="${ENCRYPT_ARGUMENT}|authkeys=$AUTH_KEYS_FILE"
-    # ENCRYPT_ARGUMENT="${ENCRYPT_ARGUMENT}|uniquesshkey"
 fi
 
 BURN_ARGUMENT="--burn $OUTPUT_DEVICE"
-if [ -n "$OUTPUT_IMAGE" ];
-then
+if [ -n "$OUTPUT_IMAGE" ]; then
     BURN_ARGUMENT="--burnfile $OUTPUT_IMAGE"
 fi
 
