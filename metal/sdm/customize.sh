@@ -40,6 +40,7 @@ download_latest_image() {
     else
         echo "[+] Image checksum verified"
     fi
+    echo "[*] Decompressing image"
     xz --decompress $image_path
 }
 
@@ -84,8 +85,8 @@ else
     # flag overwrites the original image.
     echo "[*] Creating new image '$OUTPUT_IMAGE'"
     pv $INPUT_IMAGE | dd bs=16M iflag=fullblock of=$OUTPUT_IMAGE
-    INPUT_IMAGE=$OUTPUT_IMAGE # We don't need the original INPUT_IMAGE anymore
 fi
+INPUT_IMAGE=$OUTPUT_IMAGE # We don't need the original INPUT_IMAGE anymore
 check_file_or_die "$INPUT_IMAGE"
 
 if [ -f "$SSH_KEY" ]; then
@@ -102,8 +103,7 @@ function cleanup (){
 trap cleanup EXIT INT QUIT TERM
 
 docker_repo="deb [arch=$(dpkg --print-architecture) \
-signed-by=/etc/apt/trusted.gpg.d/docker.gpg] https://download.docker.com/linux/debian \
-$(. /etc/os-release && echo "$VERSION_CODENAME") stable"
+signed-by=/etc/apt/trusted.gpg.d/docker.gpg] https://download.docker.com/linux/debian bullseye stable"
 docker_gpg_key=https://download.docker.com/linux/debian/gpg
 
 sdm \
