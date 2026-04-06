@@ -1,4 +1,0 @@
-network:           172.10.0.0/24
-gateway:           172.10.0.1
-authoritative_dns: 172.10.0.2
-recursive_dns:     172.10.0.3
