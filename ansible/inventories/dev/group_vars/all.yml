@@ -1,0 +1,5 @@
+openbao:
+  addr: https://vault.whisper.cl
+  kv_mount: kv
+  token_path: "{{ lookup('env', 'HOME') }}/.config/openbao"
+  token_file: ansible.token

@@ -1,0 +1,3 @@
+{% for user in bootstrap_access_users %}
+{{ user.user }} ALL=(ALL) {{ 'NOPASSWD:' if user.nopasswd else '' }}ALL
+{% endfor %}

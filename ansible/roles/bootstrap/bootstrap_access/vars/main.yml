@@ -1,0 +1,13 @@
+bootstrap_access_users:
+  - user: ansible
+    password: "XXXXX"
+    sudo: true
+    nopasswd: true
+    pubkey_str: "XXXX"
+    allowed_origins: 10.42.0.0/16,10.21.0.0/16
+  - user: neo
+    password: "XXXX"
+    sudo: true
+    nopasswd: false
+    pubkey_str: "XXXX"
+    allowed_origins: '*'

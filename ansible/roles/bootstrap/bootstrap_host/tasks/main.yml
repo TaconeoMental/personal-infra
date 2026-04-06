@@ -1,0 +1,10 @@
+- include_tasks: packages.yml
+
+- name: Set hostname
+  ansible.builtin.hostname:
+    name: "{{ inventory_hostname }}"
+
+- name: Change TZ
+  community.general.timezone:
+    name: "{{ bootstrap_timezone }}"
+  notify: Restart cron daemon

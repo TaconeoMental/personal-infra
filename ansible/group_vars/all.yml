@@ -1,0 +1,5 @@
+org_domain: whisper.cl
+
+ansible_user: deploy
+ansible_become: true
+

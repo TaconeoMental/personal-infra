@@ -1,0 +1,6 @@
+.venv/
+collections/
+__pycache__/
+*.retry
+*.pyc
+.secrets/

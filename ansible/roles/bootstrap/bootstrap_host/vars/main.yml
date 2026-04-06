@@ -1,0 +1,9 @@
+bootstrap_timezone: America/Santiago
+
+bootstrap_packages:
+  - present:
+    - python3-pip
+    - sudo
+    - ufw
+  - absent:
+    - algo

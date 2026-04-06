@@ -1,0 +1,9 @@
+- name: Remove unwanted packages
+  ansible.builtin.package:
+    name: "{{ bootstrap_packages.absent|default([]) }}"
+    state: absent
+
+- name: Install desired packages
+  ansible.builtin.package:
+    name: "{{ bootstrap_packages.present|default([]) }}"
+    state: present

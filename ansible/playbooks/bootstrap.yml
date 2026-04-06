@@ -1,0 +1,7 @@
+- name: Bootstrap server for ansible
+  become: true
+  gather_facts: true
+  hosts: all
+  roles:
+    - bootstrap_host
+    - bootstrap_access
