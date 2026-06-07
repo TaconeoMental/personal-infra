@@ -4,7 +4,7 @@ bootstrap_access_users:
     sudo: true
     nopasswd: true
     pubkey_str: "XXXX"
-    allowed_origins: 10.42.0.0/16,10.21.0.0/16
+    allowed_origins: "{{ internal_networks | join(',') }}"
   - user: neo
     password: "XXXX"
     sudo: true

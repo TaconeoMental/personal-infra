@@ -3,3 +3,6 @@ org_domain: whisper.cl
 ansible_user: deploy
 ansible_become: true
 
+internal_networks:
+  - "10.21.0.0/16"
+  - "10.42.0.0/16"
