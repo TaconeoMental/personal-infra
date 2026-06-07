@@ -5,6 +5,7 @@ traefik_stack_docker_user: "dockeruser"
 traefik_stack_tls_certs:
   - cert: "fullchain.pem"
     key: "privkey.pem"
+traefik_stack_edge_network_name: "edge"
 traefik_stack_authentik_enabled: false
 traefik_stack_authentik_proxy_image: "ghcr.io/goauthentik/proxy:latest"
 # traefik_stack_authentik_host must be defined in the inventory if

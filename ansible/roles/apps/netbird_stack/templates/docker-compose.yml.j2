@@ -20,7 +20,7 @@ services:
       - ./config.yml:/etc/netbird/config.yml:ro
     env_file: server.env
     networks:
-      - edge
+      - "{{ traefik_stack_edge_network_name }}"
       - netbird-db
     depends_on:
       - postgres
@@ -30,7 +30,7 @@ services:
     restart: unless-stopped
     env_file: dashboard.env
     networks:
-      - edge
+      - "{{ traefik_stack_edge_network_name }}"
     depends_on:
       - {{ netbird_stack_server_service_name }}
 
@@ -39,7 +39,7 @@ volumes:
   netbird_data:
 
 networks:
-  edge:
+  "{{ traefik_stack_edge_network_name }}":
     external: true
   netbird-db:
     driver: bridge

@@ -12,7 +12,7 @@ services:
       - ./dynamic:/etc/traefik/dynamic:ro
       - ./certs:/etc/traefik/certs:ro
     networks:
-      - edge
+      - "{{ traefik_stack_edge_network_name }}"
 {% if traefik_stack_authentik_enabled %}
 
   global-authentik-proxy:
@@ -27,9 +27,9 @@ services:
       - "9000"
       - "9443"
     networks:
-      - edge
+      - "{{ traefik_stack_edge_network_name }}"
 {% endif %}
 
 networks:
-  edge:
+  {{ traefik_stack_edge_network_name }}:
     external: true

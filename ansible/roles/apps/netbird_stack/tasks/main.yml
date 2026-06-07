@@ -1,7 +1,7 @@
 - name: Assert netbird_stack_domain is defined
   ansible.builtin.assert:
     that: netbird_stack_domain is defined
-    fail_msg: "netbird_stack_domain must be defined in inventory
+    fail_msg: "netbird_stack_domain must be defined in inventory"
 
 - name: Load secrets from OpenBao
   ansible.builtin.include_tasks: secrets.yml
