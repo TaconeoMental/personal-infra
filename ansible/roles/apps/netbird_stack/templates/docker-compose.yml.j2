@@ -1,0 +1,46 @@
+services:
+  postgres:
+    image: postgres:{{ netbird_stack_postgres_version }}
+    restart: unless-stopped
+    env_file: postgres.env
+    volumes:
+      - netbird_postgres_data:/var/lib/postgresql/data
+    networks:
+      - netbird-db
+
+  {{ netbird_stack_server_service_name }}:
+    image: netbirdio/netbird-server:{{ netbird_stack_version }}
+    restart: unless-stopped
+    ports:
+      - "{{ netbird_stack_stun_port }}:{{ netbird_stack_stun_port }}/udp"
+    command:
+      - --config /etc/netbird/config.yml
+    volumes:
+      - netbird_data:/var/lib/netbird
+      - ./config.yml:/etc/netbird/config.yml:ro
+    env_file: server.env
+    networks:
+      - edge
+      - netbird-db
+    depends_on:
+      - postgres
+
+  {{ netbird_stack_dashboard_service_name }}:
+    image: netbirdio/dashboard:{{ netbird_stack_dashboard_version }}
+    restart: unless-stopped
+    env_file: dashboard.env
+    networks:
+      - edge
+    depends_on:
+      - {{ netbird_stack_server_service_name }}
+
+volumes:
+  netbird_postgres_data:
+  netbird_data:
+
+networks:
+  edge:
+    external: true
+  netbird-db:
+    driver: bridge
+    internal: true

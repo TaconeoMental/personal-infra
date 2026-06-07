@@ -1,0 +1,45 @@
+http:
+  routers:
+    nb-dashboard:
+      rule: "Host(`{{ netbird_stack_domain }}`)"
+      entryPoints:
+        - websecure
+      service: nb-dashboard
+      middlewares:
+        - chain-public-default
+      priority: 1
+      tls: {}
+
+    nb-grpc:
+      rule: "Host(`{{ netbird_stack_domain }}`) && (PathPrefix(`/signalexchange.SignalExchange/`) || PathPrefix(`/management.ManagementService/`))"
+      entryPoints:
+        - websecure
+      service: nb-server-h2c
+      priority: 100
+      tls: {}
+
+    nb-backend:
+      rule: "Host(`{{ netbird_stack_domain }}`) && (PathPrefix(`/relay`) || PathPrefix(`/ws-proxy/`) || PathPrefix(`/api`) || PathPrefix(`/oauth2`))"
+      entryPoints:
+        - websecure
+      service: nb-server
+      middlewares:
+        - chain-public-default
+      priority: 100
+      tls: {}
+
+  services:
+    nb-dashboard:
+      loadBalancer:
+        servers:
+          - url: "http://{{ netbird_stack_dashboard_service_name }}:80"
+
+    nb-server:
+      loadBalancer:
+        servers:
+          - url: "http://{{ netbird_stack_server_service_name }}:80"
+
+    nb-server-h2c:
+      loadBalancer:
+        servers:
+          - url: "h2c://{{ netbird_stack_server_service_name }}:80"

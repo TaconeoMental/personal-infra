@@ -1,0 +1,63 @@
+- name: Assert netbird_stack_domain is defined
+  ansible.builtin.assert:
+    that: netbird_stack_domain is defined
+    fail_msg: "netbird_stack_domain must be defined in inventory
+
+- name: Load secrets from OpenBao
+  ansible.builtin.include_tasks: secrets.yml
+
+- name: Create Netbird directory
+  ansible.builtin.file:
+    path: "{{ netbird_stack_deploy_dir }}"
+    state: directory
+    owner: "{{ netbird_stack_docker_user }}"
+    group: "{{ netbird_stack_docker_user }}"
+    mode: "0750"
+
+- name: Deploy docker-compose.yml
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ netbird_stack_deploy_dir }}/docker-compose.yml"
+    owner: "{{ netbird_stack_docker_user }}"
+    group: "{{ netbird_stack_docker_user }}"
+    mode: "0640"
+  notify: Restart netbird
+
+- name: Deploy config.yml
+  ansible.builtin.template:
+    src: config.yml.j2
+    dest: "{{ netbird_stack_deploy_dir }}/config.yml"
+    owner: "{{ netbird_stack_docker_user }}"
+    group: "{{ netbird_stack_docker_user }}"
+    mode: "0640"
+  notify: Restart netbird
+
+- name: Deploy env files
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ netbird_stack_deploy_dir }}/{{ item.dest }}"
+    owner: "{{ netbird_stack_docker_user }}"
+    group: "{{ netbird_stack_docker_user }}"
+    mode: "0600"
+  loop:
+    - {src: server.env.j2, dest: server.env}
+    - {src: dashboard.env.j2, dest: dashboard.env}
+    - {src: postgres.env.j2, dest: postgres.env}
+    - {src: bootstrap.env.j2, dest: bootstrap.env}
+  notify: Restart netbird
+
+- name: Create Docker network netbird-db
+  community.docker.docker_network:
+    name: netbird-db
+    driver: bridge
+    internal: true
+    state: present
+
+- name: Deploy Netbird Traefik routing
+  ansible.builtin.include_tasks: traefik.yml
+
+- name: Start Netbird stack
+  community.docker.docker_compose_v2:
+    project_src: "{{ netbird_stack_deploy_dir }}"
+    state: present
+    pull: policy

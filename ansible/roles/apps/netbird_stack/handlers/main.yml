@@ -1,0 +1,5 @@
+- name: Restart netbird
+  community.docker.docker_compose_v2:
+    project_src: "{{ netbird_stack_deploy_dir }}"
+    state: present
+    recreate: always

@@ -1,0 +1,7 @@
+- name: Deploy Netbird Traefik routing config
+  ansible.builtin.template:
+    src: traefik-netbird.yml.j2
+    dest: "{{ traefik_stack_deploy_dir }}/dynamic/apps/netbird.yml"
+    owner: "{{ traefik_stack_docker_user }}"
+    group: "{{ traefik_stack_docker_user }}"
+    mode: "0644"
