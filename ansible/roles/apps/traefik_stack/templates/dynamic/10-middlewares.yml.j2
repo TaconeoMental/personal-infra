@@ -1,0 +1,65 @@
+http:
+  middlewares:
+    mw-security-default:
+      headers:
+        frameDeny: true
+        contentTypeNosniff: true
+        browserXssFilter: true
+        referrerPolicy: "strict-origin-when-cross-origin"
+        stsSeconds: 31536000
+        stsIncludeSubdomains: true
+        stsPreload: true
+
+    mw-internal-net-allow:
+      ipAllowList:
+        sourceRange:
+{% for cidr in internal_networks %}
+          - "{{ cidr }}"
+{% endfor %}
+{% if traefik_stack_authentik_enabled %}
+
+    mw-authentik-forward:
+      forwardAuth:
+        address: "http://global-authentik-proxy:9000/outpost.goauthentik.io/auth/traefik"
+        trustForwardHeader: true
+        authResponseHeaders:
+          - X-Authentik-username
+          - X-Authentik-groups
+          - X-Authentik-entitlements
+          - X-Authentik-email
+          - X-Authentik-name
+          - X-Authentik-uid
+          - X-Authentik-jwt
+          - X-Authentik-meta-jwks
+          - X-Authentik-meta-outpost
+          - X-Authentik-meta-provider
+          - X-Authentik-meta-app
+          - X-Authentik-meta-version
+          - Authorization
+{% endif %}
+
+    chain-public-default:
+      chain:
+        middlewares:
+          - mw-security-default
+
+    chain-internal-net-restricted:
+      chain:
+        middlewares:
+          - mw-security-default
+          - mw-internal-net-allow
+
+    chain-admin-restricted:
+      chain:
+        middlewares:
+          - mw-security-default
+          - mw-internal-net-allow
+{% if traefik_stack_authentik_enabled %}
+
+    chain-internal-net-authentik:
+      chain:
+        middlewares:
+          - mw-security-default
+          - mw-internal-net-allow
+          - mw-authentik-forward
+{% endif %}

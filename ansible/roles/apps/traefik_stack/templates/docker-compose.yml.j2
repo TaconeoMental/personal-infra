@@ -1,0 +1,35 @@
+services:
+  traefik:
+    image: traefik:{{ traefik_stack_version }}
+    restart: unless-stopped
+    command:
+      - --configFile=/etc/traefik/traefik.yml
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./dynamic:/etc/traefik/dynamic:ro
+      - ./certs:/etc/traefik/certs:ro
+    networks:
+      - edge
+{% if traefik_stack_authentik_enabled %}
+
+  global-authentik-proxy:
+    image: ${AUTHENTIK_PROXY_IMAGE}
+    container_name: global-authentik-proxy
+    restart: unless-stopped
+    environment:
+      AUTHENTIK_HOST: "{{ traefik_stack_authentik_host }}"
+      AUTHENTIK_INSECURE: "false"
+      AUTHENTIK_TOKEN: "${AUTHENTIK_TOKEN}"
+    expose:
+      - "9000"
+      - "9443"
+    networks:
+      - edge
+{% endif %}
+
+networks:
+  edge:
+    external: true

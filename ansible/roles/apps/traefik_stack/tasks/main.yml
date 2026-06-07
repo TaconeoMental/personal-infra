@@ -1,0 +1,87 @@
+- name: Assert authentik_host defined when authentik enabled
+  ansible.builtin.assert:
+    that: traefik_stack_authentik_host is defined
+    fail_msg: "traefik_stack_authentik_host must be set in inventory when traefik_stack_authentik_enabled is set to true"
+  when: traefik_stack_authentik_enabled
+
+- name: Fetch Authentik token from OpenBao
+  community.hashi_vault.vault_kv2_get:
+    path: "traefik/{{ inventory_hostname }}"
+    url: "{{ openbao.addr }}"
+    auth_method: token
+    token: "{{ lookup('file', openbao.token_path ~ '/' ~ openbao.token_file) }}"
+    mount_point: "{{ openbao.kv_mount }}"
+  register: _traefik_vault
+  when: traefik_stack_authentik_enabled
+  no_log: true
+
+- name: Create Traefik directory structure
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ traefik_stack_docker_user }}"
+    group: "{{ traefik_stack_docker_user }}"
+    mode: "0755"
+  loop:
+    - "{{ traefik_stack_deploy_dir }}"
+    - "{{ traefik_stack_deploy_dir }}/certs"
+    - "{{ traefik_stack_deploy_dir }}/dynamic"
+    - "{{ traefik_stack_deploy_dir }}/dynamic/apps"
+
+- name: Deploy docker-compose.yml
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ traefik_stack_deploy_dir }}/docker-compose.yml"
+    owner: "{{ traefik_stack_docker_user }}"
+    group: "{{ traefik_stack_docker_user }}"
+    mode: "0640"
+  notify: Restart traefik
+
+- name: Deploy .env (Authentik)
+  ansible.builtin.template:
+    src: env.j2
+    dest: "{{ traefik_stack_deploy_dir }}/.env"
+    owner: "{{ traefik_stack_docker_user }}"
+    group: "{{ traefik_stack_docker_user }}"
+    mode: "0600"
+  when: traefik_stack_authentik_enabled
+  notify: Restart traefik
+
+- name: Deploy traefik.yml
+  ansible.builtin.template:
+    src: traefik.yml.j2
+    dest: "{{ traefik_stack_deploy_dir }}/traefik.yml"
+    owner: "{{ traefik_stack_docker_user }}"
+    group: "{{ traefik_stack_docker_user }}"
+    mode: "0644"
+  notify: Restart traefik
+
+- name: Deploy dynamic/00-tls.yml
+  ansible.builtin.template:
+    src: dynamic/00-tls.yml.j2
+    dest: "{{ traefik_stack_deploy_dir }}/dynamic/00-tls.yml"
+    owner: "{{ traefik_stack_docker_user }}"
+    group: "{{ traefik_stack_docker_user }}"
+    mode: "0644"
+  notify: Restart traefik
+
+- name: Deploy dynamic/10-middlewares.yml
+  ansible.builtin.template:
+    src: dynamic/10-middlewares.yml.j2
+    dest: "{{ traefik_stack_deploy_dir }}/dynamic/10-middlewares.yml"
+    owner: "{{ traefik_stack_docker_user }}"
+    group: "{{ traefik_stack_docker_user }}"
+    mode: "0644"
+  notify: Restart traefik
+
+- name: Create Docker network edge
+  community.docker.docker_network:
+    name: edge
+    driver: bridge
+    state: present
+
+- name: Start Traefik stack
+  community.docker.docker_compose_v2:
+    project_src: "{{ traefik_stack_deploy_dir }}"
+    state: present
+    pull: policy

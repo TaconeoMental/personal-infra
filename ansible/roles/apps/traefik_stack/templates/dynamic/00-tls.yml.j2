@@ -1,0 +1,6 @@
+tls:
+  certificates:
+{% for cert in traefik_stack_tls_certs %}
+    - certFile: /etc/traefik/certs/{{ cert.cert }}
+      keyFile: /etc/traefik/certs/{{ cert.key }}
+{% endfor %}

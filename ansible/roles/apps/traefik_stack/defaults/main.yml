@@ -1,0 +1,11 @@
+traefik_stack_version: "v3.6"
+traefik_stack_log_level: "INFO"
+traefik_stack_deploy_dir: "/opt/whisper/traefik"
+traefik_stack_docker_user: "dockeruser"
+traefik_stack_tls_certs:
+  - cert: "fullchain.pem"
+    key: "privkey.pem"
+traefik_stack_authentik_enabled: false
+traefik_stack_authentik_proxy_image: "ghcr.io/goauthentik/proxy:latest"
+# traefik_stack_authentik_host must be defined in the inventory if
+# traefik_stack_authentik_enabled is set to true
