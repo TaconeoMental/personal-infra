@@ -1,0 +1,8 @@
+- name: Deploy VPN server
+  hosts: edge_vpn
+  become: true
+  roles:
+    - role: bootstrap_host
+    - role: bootstrap_access
+    - role: traefik_stack
+    - role: netbird_stack

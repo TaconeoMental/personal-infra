@@ -1,0 +1,9 @@
+ansible_host: 10.42.182.164
+
+netbird_stack_domain: "vpn.whisper.cl"
+
+traefik_stack_authentik_enabled: false
+
+traefik_stack_tls_certs:
+  - cert: "fullchain.pem"
+    key: "privkey.pem"

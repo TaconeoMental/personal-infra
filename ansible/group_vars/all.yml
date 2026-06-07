@@ -1,6 +1,6 @@
 org_domain: whisper.cl
 
-ansible_user: deploy
+ansible_user: ansible
 ansible_become: true
 
 internal_networks:
