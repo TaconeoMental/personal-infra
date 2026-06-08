@@ -3,6 +3,7 @@
   become: true
   roles:
     - role: bootstrap_host
+    - role: bootstrap_docker
     - role: bootstrap_access
     - role: traefik_stack
     - role: netbird_stack

@@ -7,7 +7,7 @@ netbird_stack_log_level: "info"
 netbird_stack_stun_port: 3478
 netbird_stack_metrics_port: 9090
 netbird_stack_healthcheck_port: 9000
-netbird_stack_local_auth_disabled: true
+netbird_stack_local_auth_disabled: false
 netbird_stack_postgres_db: "netbird"
 netbird_stack_postgres_user: "netbird"
 netbird_stack_server_service_name: "netbird-server"

@@ -1,0 +1,16 @@
+- name: Install Docker Engine
+  ansible.builtin.include_tasks: install.yml
+
+- name: Ensure docker group exists
+  ansible.builtin.group:
+    name: "{{ bootstrap_docker_group }}"
+    state: present
+
+- name: Create dedicated docker system user
+  ansible.builtin.user:
+    name: "{{ bootstrap_docker_user }}"
+    system: true
+    shell: /usr/sbin/nologin
+    groups: "{{ bootstrap_docker_group }}"
+    append: true
+    create_home: false
