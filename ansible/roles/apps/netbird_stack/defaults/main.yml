@@ -15,5 +15,4 @@ netbird_stack_dashboard_service_name: "dashboard"
 netbird_stack_dashboard_auth_client_id: "netbird-dashboard"
 netbird_stack_dashboard_auth_audience: "netbird-dashboard"
 netbird_stack_dashboard_auth_supported_scopes: "openid profile email groups"
-netbird_stack_vault_path: "netbird/{{ inventory_hostname }}"
 # netbird_stack_domain must be defined in the inventory

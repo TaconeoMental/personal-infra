@@ -4,17 +4,6 @@
     fail_msg: "traefik_stack_authentik_host must be set in inventory when traefik_stack_authentik_enabled is set to true"
   when: traefik_stack_authentik_enabled
 
-- name: Fetch Authentik token from OpenBao
-  community.hashi_vault.vault_kv2_get:
-    path: "traefik/{{ inventory_hostname }}"
-    url: "{{ openbao.addr }}"
-    auth_method: token
-    token: "{{ lookup('file', openbao.token_path ~ '/' ~ openbao.token_file) }}"
-    mount_point: "{{ openbao.kv_mount }}"
-  register: _traefik_vault
-  when: traefik_stack_authentik_enabled
-  no_log: true
-
 - name: Create Traefik directory structure
   ansible.builtin.file:
     path: "{{ item }}"

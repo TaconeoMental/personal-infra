@@ -7,7 +7,7 @@ server:
   healthcheckAddress: ":{{ netbird_stack_healthcheck_port }}"
   logLevel: "{{ netbird_stack_log_level }}"
   logFile: "console"
-  authSecret: "{{ _nb_auth_secret }}"
+  authSecret: "{{ netbird_stack_secret_auth_secret }}"
   dataDir: "/var/lib/netbird"
   auth:
     issuer: "https://{{ netbird_stack_domain }}/oauth2"
@@ -21,5 +21,5 @@ server:
       - "http://localhost:53000/"
   store:
     engine: "postgres"
-    dsn: "host=postgres user={{ netbird_stack_postgres_user }} password={{ _nb_postgres_password }} dbname={{ netbird_stack_postgres_db }} port=5432 sslmode=disable"
-    encryptionKey: "{{ _nb_encryption_key }}"
+    dsn: "host=postgres user={{ netbird_stack_postgres_user }} password={{ netbird_stack_secret_postgres_password }} dbname={{ netbird_stack_postgres_db }} port=5432 sslmode=disable"
+    encryptionKey: "{{ netbird_stack_secret_encryption_key }}"
