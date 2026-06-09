@@ -1,0 +1,25 @@
+- name: Assert required netbird vars are defined
+  ansible.builtin.assert:
+    that:
+      - netbird_service_pat is defined
+      - netbird_management_url is defined
+      - netbird_setup_key_value is defined
+      - netbird_static_ip is defined
+    fail_msg: >-
+      Missing required vars
+
+- name: Install Netbird client
+  ansible.builtin.include_tasks: install.yml
+
+- name: Check current Netbird status
+  ansible.builtin.command:
+    cmd: netbird status --json
+  register: _nb_pre
+  changed_when: false
+  failed_when: false
+
+- name: Enroll and assign static IP
+  ansible.builtin.include_tasks: enroll.yml
+  when: >-
+    _nb_pre.rc != 0 or
+    netbird_static_ip not in (_nb_pre.stdout | from_json).get('netbirdIp', '')

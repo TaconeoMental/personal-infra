@@ -1,0 +1,74 @@
+- name: Join Netbird VPN
+  ansible.builtin.command:
+    cmd: >-
+      netbird up
+      --setup-key={{ netbird_setup_key_value }}
+      --management-url={{ netbird_management_url }}
+  changed_when: true
+  no_log: true
+
+- name: Wait for initial Netbird connection
+  ansible.builtin.command:
+    cmd: netbird status --json
+  register: _nb_connected
+  until: (_nb_connected.stdout | from_json).get('netbirdIp', '') != ''
+  retries: "{{ bootstrap_netbird_client_enroll_retries }}"
+  delay: "{{ bootstrap_netbird_client_enroll_delay }}"
+  changed_when: false
+
+- name: Set local public key fact
+  ansible.builtin.set_fact:
+    _nb_pubkey: "{{ (_nb_connected.stdout | from_json).publicKey }}"
+
+- name: Wait for peer to appear in management API
+  ansible.builtin.uri:
+    url: "{{ netbird_management_url }}/api/peers"
+    method: GET
+    headers:
+      Authorization: "Token {{ netbird_service_pat }}"
+    status_code: 200
+  register: _nb_peers
+  until: _nb_peers.json | selectattr('key', 'equalto', _nb_pubkey) | list | length > 0
+  retries: 12
+  delay: 5
+  no_log: true
+
+- name: Extract peer ID
+  ansible.builtin.set_fact:
+    _nb_peer_id: >-
+      {{ (_nb_peers.json | selectattr('key', 'equalto', _nb_pubkey) | first).id }}
+
+- name: Assign static Netbird IP
+  ansible.builtin.uri:
+    url: "{{ netbird_management_url }}/api/peers/{{ _nb_peer_id }}"
+    method: PUT
+    headers:
+      Authorization: "Token {{ netbird_service_pat }}"
+    body_format: json
+    body:
+      name: "{{ inventory_hostname }}"
+      ssh_enabled: false
+      login_expiration_enabled: false
+      inactivity_expiration_enabled: false
+      ip: "{{ netbird_static_ip }}"
+    status_code: 200
+  no_log: true
+
+- name: Restart Netbird to apply static IP
+  ansible.builtin.systemd:
+    name: netbird
+    state: restarted
+
+- name: Wait for Netbird to reconnect with static IP
+  ansible.builtin.command:
+    cmd: netbird status --json
+  register: _nb_final
+  until: >-
+    (_nb_final.stdout | from_json).get('netbirdIp', '').split('/)[0] == netbird_static_ip
+  retries: "{{ bootstrap_netbird_client_enroll_retries }}"
+  delay: "{{ bootstrap_netbird_client_enroll_delay }}"
+  changed_when: false
+
+- name: Confirm static IP assignment
+  ansible.builtin.debug:
+    msg: "{{ inventory_hostname }} connected to Netbird with static IP {{ netbird_static_ip }}"

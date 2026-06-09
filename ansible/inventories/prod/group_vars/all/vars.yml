@@ -1,3 +1,5 @@
+netbird_management_url: "https://vpn.whisper.cl"
+
 openbao:
   addr: https://vault.whisper.cl
   kv_mount: kv

@@ -1,0 +1,51 @@
+- name: Install netbird (Debian/Ubuntu)
+  when: ansible_os_family == 'Debian'
+  block:
+    - name: Ensure /etc/apt/keyrings exists
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Add Netbird GPG key
+      ansible.builtin.get_url:
+        url: "{{ bootstrap_netbird_client_gpg_key_url_deb }}"
+        dest: /etc/apt/keyrings/netbird.asc
+        mode: "0644"
+
+    - name: Add Netbird APT repository
+      ansible.builtin.apt_repository:
+        repo: >-
+          deb [signed-by=/etc/apt/keyrings/netbird.asc]
+          {{ bootstrap_netbird_client_repo_url_deb }} stable main
+        state: present
+        filename: netbird
+
+    - name: Install netbird
+      ansible.builtin.apt:
+        name: netbird
+        state: present
+        update_cache: true
+
+- name: Install netbird (RedHat/Fedora)
+  when: ansible_os_family == 'RedHat'
+  block:
+    - name: Add Netbird RPM repository
+      ansible.builtin.yum_repository:
+        name: netbird
+        description: Netbird
+        baseurl: "{{ bootstrap_netbird_client_repo_url_rpm }}"
+        gpgcheck: false
+        enabled: true
+
+    - name: Install netbird
+      ansible.builtin.dnf:
+        name: netbird
+        state: present
+
+- name: Fail on unsupported OS family
+  ansible.builtin.fail:
+    msg: "OS family '{{ ansible_os_family }}' is not supported by bootstrap_netbird_client"
+  when: ansible_os_family not in ['Debian', 'RedHat']

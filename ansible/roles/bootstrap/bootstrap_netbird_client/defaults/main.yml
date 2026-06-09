@@ -1,0 +1,5 @@
+bootstrap_netbird_client_gpg_key_url_deb: "https://pkgs.netbird.io/debian/public.key"
+bootstrap_netbird_client_repo_url_deb: "https://pkgs.netbird.io/debian"
+bootstrap_netbird_client_repo_url_rpm: "https://pkgs.netbird.io/yum"
+bootstrap_netbird_client_enroll_retries: 24
+bootstrap_netbird_client_enroll_delay: 5
